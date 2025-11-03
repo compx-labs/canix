@@ -1,16 +1,85 @@
-# React + Vite
+# Canix
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Hunt for the best yield with Canix
 
-Currently, two official plugins are available:
+## Tech Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Vite** - Fast build tool and dev server
+- **React 19** - Modern UI library
+- **Tailwind CSS v3** - Utility-first CSS framework
 
-## React Compiler
+## Getting Started
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Prerequisites
 
-## Expanding the ESLint configuration
+- Node.js (v16 or higher)
+- npm
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Installation
+
+1. Clone the repository:
+```bash
+git clone https://github.com/compx-labs/canix.git
+cd canix
+```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+### Development
+
+Start the development server:
+```bash
+npm run dev
+```
+
+The app will be available at `http://localhost:5173`
+
+### Build
+
+Build the production version:
+```bash
+npm run build
+```
+
+### Preview
+
+Preview the production build:
+```bash
+npm run preview
+```
+
+### Lint
+
+Run ESLint:
+```bash
+npm run lint
+```
+
+## Project Structure
+
+```
+canix/
+├── public/          # Static assets
+├── src/
+│   ├── assets/      # Images, fonts, etc.
+│   ├── App.jsx      # Main application component
+│   ├── main.jsx     # Application entry point
+│   └── index.css    # Global styles with Tailwind directives
+├── index.html       # HTML template
+├── vite.config.js   # Vite configuration
+└── tailwind.config.js # Tailwind CSS configuration
+```
+
+## Features
+
+- ⚡ Lightning-fast development with Vite HMR
+- 🎨 Beautiful UI with Tailwind CSS v3
+- 📱 Responsive design
+- 🔧 ESLint for code quality
+
+## License
+
+MIT
