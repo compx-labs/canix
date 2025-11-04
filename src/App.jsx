@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { yieldData } from './data/yieldData';
+import { useQuery } from '@tanstack/react-query';
+import { fetchOpportunities } from './services/api';
 import Footer from './components/Footer';
 
 function App() {
@@ -11,6 +12,12 @@ function App() {
   const [openDropdown, setOpenDropdown] = useState(null);
   const [expandedRow, setExpandedRow] = useState(null);
   const rowsPerPage = 20;
+  
+  // Fetch data from API
+  const { data: yieldData = [], isLoading, isError, error } = useQuery({
+    queryKey: ['opportunities'],
+    queryFn: fetchOpportunities,
+  });
   
   // Filter data based on search and filters
   const filteredData = yieldData.filter((row) => {
@@ -31,15 +38,64 @@ function App() {
     
     return matchesSearch && matchesAssetType && matchesPlatform && matchesYieldType;
   });
+
+  // Sort by APY (highest to lowest)
+  const sortedData = [...filteredData].sort((a, b) => {
+    const apy1 = parseFloat(a.yield.replace('%', '')) || 0;
+    const apy2 = parseFloat(b.yield.replace('%', '')) || 0;
+    return apy2 - apy1;
+  });
   
   // Calculate pagination
-  const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+  const totalPages = Math.ceil(sortedData.length / rowsPerPage);
   const startIndex = (currentPage - 1) * rowsPerPage;
   const endIndex = startIndex + rowsPerPage;
-  const currentData = filteredData.slice(startIndex, endIndex);
+  const currentData = sortedData.slice(startIndex, endIndex);
   
   const goToPage = (page) => {
     setCurrentPage(page);
+  };
+
+  // Generate pagination numbers with ellipsis
+  const getPaginationNumbers = () => {
+    const pages = [];
+    const showEllipsisThreshold = 7; // Show ellipsis if more than 7 pages
+    
+    if (totalPages <= showEllipsisThreshold) {
+      // Show all pages if there are few
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Always show first page
+      pages.push(1);
+      
+      // Determine range around current page
+      let startPage = Math.max(2, currentPage - 1);
+      let endPage = Math.min(totalPages - 1, currentPage + 1);
+      
+      // Add ellipsis after first page if needed
+      if (startPage > 2) {
+        pages.push('...');
+      }
+      
+      // Add pages around current page
+      for (let i = startPage; i <= endPage; i++) {
+        pages.push(i);
+      }
+      
+      // Add ellipsis before last page if needed
+      if (endPage < totalPages - 1) {
+        pages.push('...');
+      }
+      
+      // Always show last page
+      if (totalPages > 1) {
+        pages.push(totalPages);
+      }
+    }
+    
+    return pages;
   };
 
   // Reset to page 1 when filters change
@@ -96,6 +152,39 @@ function App() {
       </div>
     );
   };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-graphite flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-crimson border-t-transparent mb-4"></div>
+          <p className="text-silver text-lg">Loading yield opportunities...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (isError) {
+    return (
+      <div className="min-h-screen bg-graphite flex items-center justify-center">
+        <div className="text-center max-w-md px-4">
+          <div className="text-crimson text-6xl mb-4">⚠️</div>
+          <h2 className="text-silver text-2xl font-bold mb-2">Unable to Load Data</h2>
+          <p className="text-silver/70 mb-4">
+            {error?.message || 'Failed to fetch yield opportunities. Please check if the API server is running.'}
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-crimson hover:bg-crimson-dark text-white px-6 py-2 text-sm font-semibold transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-graphite">
@@ -158,14 +247,14 @@ function App() {
               <CustomDropdown
                 label="Asset Type"
                 value={assetType}
-                options={['All', 'Governance', 'RWA', 'Yield bearing', 'Stablecoin']}
+                options={['All', 'Governance', 'RWA', 'Yield bearing', 'Stablecoin', 'Liquidity Token', 'Standard Asset']}
                 onChange={handleFilterChange(setAssetType)}
                 dropdownKey="assetType"
               />
               <CustomDropdown
                 label="Platform"
                 value={platform}
-                options={['All', 'CompX', 'Folks Finance', 'Tinyman', 'Pact.fi']}
+                options={['All', 'CompX', 'Folks Finance', 'Tinyman', 'Pact']}
                 onChange={handleFilterChange(setPlatform)}
                 dropdownKey="platform"
               />
@@ -307,7 +396,7 @@ function App() {
             {/* Pagination */}
             <div className="px-6 py-3 border-t border-graphite-100 bg-graphite-50 flex items-center justify-between">
               <div className="text-xs text-silver/60">
-                Showing {filteredData.length > 0 ? startIndex + 1 : 0}-{Math.min(endIndex, filteredData.length)} of {filteredData.length}
+                Showing {sortedData.length > 0 ? startIndex + 1 : 0}-{Math.min(endIndex, sortedData.length)} of {sortedData.length}
               </div>
               <div className="flex gap-2">
                 <button
@@ -317,19 +406,28 @@ function App() {
                 >
                   Previous
                 </button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <button
-                    key={page}
-                    onClick={() => goToPage(page)}
-                    className={`px-3 py-1 text-xs font-semibold transition-colors ${
-                      currentPage === page
-                        ? 'bg-crimson text-white border border-crimson'
-                        : 'text-silver bg-graphite-100 border border-graphite-100 hover:border-crimson'
-                    }`}
-                  >
-                    {page}
-                  </button>
-                ))}
+                {getPaginationNumbers().map((page, index) => {
+                  if (page === '...') {
+                    return (
+                      <span key={`ellipsis-${index}`} className="px-3 py-1 text-xs font-semibold text-silver/50">
+                        ...
+                      </span>
+                    );
+                  }
+                  return (
+                    <button
+                      key={page}
+                      onClick={() => goToPage(page)}
+                      className={`px-3 py-1 text-xs font-semibold transition-colors ${
+                        currentPage === page
+                          ? 'bg-crimson text-white border border-crimson'
+                          : 'text-silver bg-graphite-100 border border-graphite-100 hover:border-crimson'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  );
+                })}
                 <button
                   onClick={() => goToPage(currentPage + 1)}
                   disabled={currentPage === totalPages}
