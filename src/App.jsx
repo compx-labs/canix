@@ -1,77 +1,348 @@
+import { useState } from 'react';
+import { yieldData } from './data/yieldData';
+import Footer from './components/Footer';
+
 function App() {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [assetType, setAssetType] = useState('All');
+  const [platform, setPlatform] = useState('All');
+  const [yieldType, setYieldType] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [openDropdown, setOpenDropdown] = useState(null);
+  const [expandedRow, setExpandedRow] = useState(null);
+  const rowsPerPage = 20;
+  
+  // Filter data based on search and filters
+  const filteredData = yieldData.filter((row) => {
+    // Search filter
+    const searchLower = searchQuery.toLowerCase();
+    const matchesSearch = searchQuery === '' || 
+      row.platform.toLowerCase().includes(searchLower) ||
+      row.asset.toLowerCase().includes(searchLower);
+    
+    // Asset Type filter
+    const matchesAssetType = assetType === 'All' || row.assetType === assetType;
+    
+    // Platform filter
+    const matchesPlatform = platform === 'All' || row.platform === platform;
+    
+    // Yield Type filter
+    const matchesYieldType = yieldType === 'All' || row.yieldType === yieldType;
+    
+    return matchesSearch && matchesAssetType && matchesPlatform && matchesYieldType;
+  });
+  
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+  const startIndex = (currentPage - 1) * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  const currentData = filteredData.slice(startIndex, endIndex);
+  
+  const goToPage = (page) => {
+    setCurrentPage(page);
+  };
+
+  // Reset to page 1 when filters change
+  const handleFilterChange = (setter) => (value) => {
+    setter(value);
+    setCurrentPage(1);
+  };
+
+  const toggleDropdown = (dropdown) => {
+    setOpenDropdown(openDropdown === dropdown ? null : dropdown);
+  };
+
+  const CustomDropdown = ({ label, value, options, onChange, dropdownKey }) => {
+    const isOpen = openDropdown === dropdownKey;
+    
+    return (
+      <div className="relative">
+        <label className="block text-silver/60 text-xs mb-1 font-semibold uppercase">{label}</label>
+        <button
+          onClick={() => toggleDropdown(dropdownKey)}
+          className="w-full bg-graphite-50 border border-graphite-100 text-silver px-3 py-2 text-sm text-left focus:outline-none focus:border-crimson transition-colors flex items-center justify-between"
+        >
+          <span>{value}</span>
+          <svg 
+            className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        {isOpen && (
+          <div className="absolute z-10 w-full mt-1 bg-graphite-50 border border-crimson shadow-glow max-h-60 overflow-y-auto">
+            {options.map((option) => (
+              <button
+                key={option}
+                onClick={() => {
+                  onChange(option);
+                  setOpenDropdown(null);
+                }}
+                className={`w-full px-3 py-2 text-sm text-left hover:bg-graphite-100 transition-colors ${
+                  value === option ? 'bg-graphite-100 text-crimson font-semibold' : 'text-silver'
+                }`}
+              >
+                {value === option && (
+                  <span className="mr-2 text-crimson">✓</span>
+                )}
+                {option}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="container mx-auto px-4 py-16">
-        <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-graphite">
+      <div className="container mx-auto px-4 py-12">
+        <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <header className="text-center mb-12">
-            <h1 className="text-5xl font-bold text-gray-900 mb-4">
-              Canix
-            </h1>
-            <p className="text-xl text-gray-600">
-              Hunt for the best yield with Canix
-            </p>
+          <header className="mb-6 md:mb-8 flex items-center justify-between gap-4">
+            <img 
+              src="/logo-long.png" 
+              alt="Canix - The Yield Hunter" 
+              className="h-24 max-w-[50%] object-contain"
+            />
+            <img 
+              src="/powered by.png" 
+              alt="Powered by CompX" 
+              className="h-8 sm:h-12 md:h-16 lg:h-20 max-w-[45%] object-contain"
+            />
           </header>
 
-          {/* Main Content Card */}
-          <div className="bg-white rounded-lg shadow-xl p-8 mb-8">
-            <h2 className="text-3xl font-semibold text-gray-800 mb-6">
-              Welcome to Canix
+          {/* Intro Section */}
+          <div className="mb-6 md:mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold text-silver mb-2">
+              Hunt down the best Yield
             </h2>
-            <p className="text-gray-600 mb-4 leading-relaxed">
-              Discover optimal yield opportunities across decentralized finance protocols.
-              Our platform helps you make informed decisions to maximize your returns.
+            <p className="text-sm md:text-base text-silver/70">
+              Use Canix to find the best yield opportunities on Algorand across multiple protocols.
             </p>
-            <div className="grid md:grid-cols-3 gap-6 mt-8">
-              {/* Feature 1 */}
-              <div className="bg-blue-50 rounded-lg p-6">
-                <div className="text-blue-600 mb-3">
-                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                  </svg>
-                </div>
-                <h3 className="font-semibold text-gray-800 mb-2">High Yields</h3>
-                <p className="text-sm text-gray-600">
-                  Find the highest APY opportunities across multiple protocols
-                </p>
-              </div>
+          </div>
 
-              {/* Feature 2 */}
-              <div className="bg-indigo-50 rounded-lg p-6">
-                <div className="text-indigo-600 mb-3">
-                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                  </svg>
-                </div>
-                <h3 className="font-semibold text-gray-800 mb-2">Secure</h3>
-                <p className="text-sm text-gray-600">
-                  Audited smart contracts and transparent security practices
-                </p>
-              </div>
+          {/* Search and Filters */}
+          <div className="space-y-3 mb-6">
+            {/* Search Bar */}
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Search platforms, assets..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="flex-1 bg-graphite-50 border border-graphite-100 text-silver placeholder-silver/40 px-4 py-2 text-sm focus:outline-none focus:border-crimson transition-colors"
+              />
+              <button
+                onClick={() => {
+                  setSearchQuery('');
+                  setAssetType('All');
+                  setPlatform('All');
+                  setYieldType('All');
+                  setCurrentPage(1);
+                }}
+                className="bg-crimson hover:bg-crimson-dark text-white px-6 py-2 text-sm font-semibold transition-colors"
+              >
+                Clear
+              </button>
+            </div>
 
-              {/* Feature 3 */}
-              <div className="bg-purple-50 rounded-lg p-6">
-                <div className="text-purple-600 mb-3">
-                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                </div>
-                <h3 className="font-semibold text-gray-800 mb-2">Fast</h3>
-                <p className="text-sm text-gray-600">
-                  Quick and efficient yield optimization strategies
-                </p>
-              </div>
+            {/* Filter Dropdowns */}
+            <div className="grid grid-cols-3 gap-2 md:gap-3">
+              <CustomDropdown
+                label="Asset Type"
+                value={assetType}
+                options={['All', 'Governance', 'RWA', 'Yield bearing', 'Stablecoin']}
+                onChange={handleFilterChange(setAssetType)}
+                dropdownKey="assetType"
+              />
+              <CustomDropdown
+                label="Platform"
+                value={platform}
+                options={['All', 'CompX', 'Folks Finance', 'Tinyman', 'Pact.fi']}
+                onChange={handleFilterChange(setPlatform)}
+                dropdownKey="platform"
+              />
+              <CustomDropdown
+                label="Yield Type"
+                value={yieldType}
+                options={['All', 'Staking', 'Farming', 'Liquidity Pool', 'Lending']}
+                onChange={handleFilterChange(setYieldType)}
+                dropdownKey="yieldType"
+              />
             </div>
           </div>
 
-          {/* CTA Section */}
-          <div className="text-center">
-            <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3 rounded-lg shadow-lg transition-colors duration-200">
-              Get Started
-            </button>
+          {/* Yield Table */}
+          <div className="bg-graphite-50 shadow-glow overflow-hidden border border-graphite-100">
+            <div className="px-6 py-3 border-b border-graphite-100">
+              <h2 className="text-lg font-semibold text-silver">
+                Top Yield Opportunities
+              </h2>
+              <p className="text-silver/60 text-xs mt-1">
+                Real-time yield data across DeFi protocols
+              </p>
+            </div>
+
+            {/* Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-graphite-100">
+                  <tr>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-silver/80 uppercase tracking-wider">
+                      Platform
+                    </th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-silver/80 uppercase tracking-wider">
+                      Asset
+                    </th>
+                    <th className="hidden md:table-cell px-4 py-2 text-left text-xs font-semibold text-silver/80 uppercase tracking-wider">
+                      Asset Type
+                    </th>
+                    <th className="hidden md:table-cell px-4 py-2 text-left text-xs font-semibold text-silver/80 uppercase tracking-wider">
+                      Yield Type
+                    </th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-silver/80 uppercase tracking-wider">
+                      Yield
+                    </th>
+                    <th className="hidden md:table-cell px-4 py-2 text-left text-xs font-semibold text-silver/80 uppercase tracking-wider">
+                      TVL
+                    </th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-silver/80 uppercase tracking-wider">
+                      Rewards
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-graphite-100">
+                  {currentData.length === 0 ? (
+                    <tr>
+                      <td colSpan="7" className="px-4 py-12 text-center">
+                        <p className="text-silver/60 text-sm">No yield opportunities found matching your filters.</p>
+                        <p className="text-silver/40 text-xs mt-2">Try adjusting your search or filter criteria.</p>
+                      </td>
+                    </tr>
+                  ) : (
+                    currentData.map((row, index) => (
+                    <>
+                      <tr
+                        key={index}
+                        onClick={() => setExpandedRow(expandedRow === index ? null : index)}
+                        className="hover:bg-graphite-100 transition-colors duration-150 cursor-pointer"
+                      >
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <img 
+                              src={row.logo} 
+                              alt={row.platform}
+                              className="w-6 h-6 mr-2"
+                            />
+                            <span className="text-silver text-sm font-semibold">{row.platform}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <span className="text-silver/90 text-sm font-mono">{row.asset}</span>
+                        </td>
+                        <td className="hidden md:table-cell px-4 py-3 whitespace-nowrap">
+                          <span className="text-silver/70 text-xs">{row.assetType}</span>
+                        </td>
+                        <td className="hidden md:table-cell px-4 py-3 whitespace-nowrap">
+                          <span className="text-silver/70 text-xs">{row.yieldType}</span>
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <span className="text-success font-bold text-sm">{row.yield}</span>
+                        </td>
+                        <td className="hidden md:table-cell px-4 py-3 whitespace-nowrap">
+                          <span className="text-silver/90 text-sm">{row.tvl}</span>
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <span className="px-2 py-1 bg-amber/20 text-amber text-xs font-semibold">
+                            {row.rewards}
+                          </span>
+                        </td>
+                      </tr>
+                      {/* Mobile Expandable Section */}
+                      {expandedRow === index && (
+                        <tr className="md:hidden bg-graphite-100">
+                          <td colSpan="5" className="px-4 py-3">
+                            <div className="space-y-3 text-xs">
+                              <div className="flex justify-between">
+                                <span className="text-silver/60 font-semibold uppercase">Asset Type:</span>
+                                <span className="text-silver">{row.assetType}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-silver/60 font-semibold uppercase">Yield Type:</span>
+                                <span className="text-silver">{row.yieldType}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-silver/60 font-semibold uppercase">TVL:</span>
+                                <span className="text-silver">{row.tvl}</span>
+                              </div>
+                              <a
+                                href={row.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-full bg-crimson hover:bg-crimson-dark text-white font-semibold px-4 py-2 text-xs flex items-center justify-center gap-2 transition-colors"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <span>Start Earning</span>
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                </svg>
+                              </a>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </>
+                  )))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            <div className="px-6 py-3 border-t border-graphite-100 bg-graphite-50 flex items-center justify-between">
+              <div className="text-xs text-silver/60">
+                Showing {filteredData.length > 0 ? startIndex + 1 : 0}-{Math.min(endIndex, filteredData.length)} of {filteredData.length}
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => goToPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 text-xs font-semibold text-silver bg-graphite-100 border border-graphite-100 hover:border-crimson transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-graphite-100"
+                >
+                  Previous
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <button
+                    key={page}
+                    onClick={() => goToPage(page)}
+                    className={`px-3 py-1 text-xs font-semibold transition-colors ${
+                      currentPage === page
+                        ? 'bg-crimson text-white border border-crimson'
+                        : 'text-silver bg-graphite-100 border border-graphite-100 hover:border-crimson'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+                <button
+                  onClick={() => goToPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 text-xs font-semibold text-silver bg-graphite-100 border border-graphite-100 hover:border-crimson transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-graphite-100"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   )
 }
