@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchOpportunities } from './services/api';
 import Footer from './components/Footer';
@@ -11,13 +11,47 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [openDropdown, setOpenDropdown] = useState(null);
   const [expandedRow, setExpandedRow] = useState(null);
+  const [loadingProgress, setLoadingProgress] = useState(1);
+  const [loadingTextIndex, setLoadingTextIndex] = useState(0);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const rowsPerPage = 20;
   
   // Fetch data from API
-  const { data: yieldData = [], isLoading, isError, error } = useQuery({
+  const { data: yieldData = [], isError, error } = useQuery({
     queryKey: ['opportunities'],
     queryFn: fetchOpportunities,
   });
+
+  // Handle initial loading with 5 second minimum
+  useEffect(() => {
+    if (isInitialLoad) {
+      // Progress bar animation (5 segments over 5 seconds)
+      const progressInterval = setInterval(() => {
+        setLoadingProgress((prev) => {
+          if (prev >= 5) {
+            return 5;
+          }
+          return prev + 1;
+        });
+      }, 1000);
+
+      // Text cycling animation (change every 1.5 seconds)
+      const textInterval = setInterval(() => {
+        setLoadingTextIndex((prev) => (prev + 1) % 5);
+      }, 1500);
+      
+      // Set minimum 5 second delay before allowing content to show
+      const timer = setTimeout(() => {
+        setIsInitialLoad(false);
+      }, 5000);
+
+      return () => {
+        clearInterval(progressInterval);
+        clearInterval(textInterval);
+        clearTimeout(timer);
+      };
+    }
+  }, [isInitialLoad]);
   
   // Filter data based on search and filters
   const filteredData = yieldData.filter((row) => {
@@ -153,13 +187,45 @@ function App() {
     );
   };
 
-  // Loading state
-  if (isLoading) {
+  // Loading messages that cycle
+  const loadingMessages = [
+    "Scanning DeFi protocols...",
+    "Analyzing yield opportunities...",
+    "Calculating APYs across Algorand...",
+    "Fetching TVL data...",
+    "Preparing your dashboard..."
+  ];
+
+  // Loading state (show for minimum 5 seconds on initial load)
+  if (isInitialLoad) {
     return (
-      <div className="min-h-screen bg-graphite flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-crimson border-t-transparent mb-4"></div>
-          <p className="text-silver text-lg">Loading yield opportunities...</p>
+      <div className="min-h-screen bg-graphite flex items-center justify-center px-4">
+        <div className="text-center max-w-md w-full">
+          {/* Logo */}
+          <img 
+            src="/logo-long.png" 
+            alt="Canix" 
+            className="h-44 mx-auto mb-8"
+          />
+          
+          {/* 5-Segment Progress Bar */}
+          <div className="flex gap-2 mb-6">
+            {[1, 2, 3, 4, 5].map((segment) => (
+              <div
+                key={segment}
+                className={`flex-1 h-2 transition-all duration-500 ${
+                  loadingProgress >= segment
+                    ? 'bg-crimson shadow-glow'
+                    : 'bg-graphite-100'
+                }`}
+              />
+            ))}
+          </div>
+          
+          {/* Cycling Text */}
+          <p className="text-silver/80 text-sm font-mono animate-pulse">
+            {loadingMessages[loadingTextIndex]}
+          </p>
         </div>
       </div>
     );
@@ -320,7 +386,15 @@ function App() {
                     <>
                       <tr
                         key={index}
-                        onClick={() => setExpandedRow(expandedRow === index ? null : index)}
+                        onClick={() => {
+                          // On mobile, toggle expansion
+                          if (window.innerWidth < 768) {
+                            setExpandedRow(expandedRow === index ? null : index);
+                          } else {
+                            // On desktop, navigate to platform
+                            window.open(row.url, '_blank', 'noopener,noreferrer');
+                          }
+                        }}
                         className="hover:bg-graphite-100 transition-colors duration-150 cursor-pointer"
                       >
                         <td className="px-4 py-3 whitespace-nowrap">

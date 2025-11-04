@@ -24,8 +24,8 @@ const platformLogos = {
 const platformUrls = {
   'Tinyman': 'https://app.tinyman.org',
   'CompX': 'https://app.compx.io',
-  'Folks Finance': 'https://folks.finance',
-  'Pact': 'https://pact.fi',
+  'Folks Finance': 'https://app.folks.finance',
+  'Pact': 'https://app.pact.fi',
 };
 
 // Type mapping for yield types
