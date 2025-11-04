@@ -368,7 +368,7 @@ function App() {
                     <th className="hidden md:table-cell px-4 py-2 text-left text-xs font-semibold text-silver/80 uppercase tracking-wider">
                       TVL
                     </th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-silver/80 uppercase tracking-wider">
+                    <th className="hidden md:table-cell px-4 py-2 text-left text-xs font-semibold text-silver/80 uppercase tracking-wider">
                       Rewards
                     </th>
                   </tr>
@@ -422,7 +422,7 @@ function App() {
                         <td className="hidden md:table-cell px-4 py-3 whitespace-nowrap">
                           <span className="text-silver/90 text-sm">{row.tvl}</span>
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap">
+                        <td className="hidden md:table-cell px-4 py-3 whitespace-nowrap">
                           <span className="px-2 py-1 bg-amber/20 text-amber text-xs font-semibold">
                             {row.rewards}
                           </span>
@@ -431,7 +431,7 @@ function App() {
                       {/* Mobile Expandable Section */}
                       {expandedRow === index && (
                         <tr className="md:hidden bg-graphite-100">
-                          <td colSpan="5" className="px-4 py-3">
+                          <td colSpan="3" className="px-4 py-3">
                             <div className="space-y-3 text-xs">
                               <div className="flex justify-between">
                                 <span className="text-silver/60 font-semibold uppercase">Asset Type:</span>
@@ -444,6 +444,10 @@ function App() {
                               <div className="flex justify-between">
                                 <span className="text-silver/60 font-semibold uppercase">TVL:</span>
                                 <span className="text-silver">{row.tvl}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-silver/60 font-semibold uppercase">Rewards:</span>
+                                <span className="px-2 py-1 bg-amber/20 text-amber font-semibold">{row.rewards}</span>
                               </div>
                               <a
                                 href={row.url}
