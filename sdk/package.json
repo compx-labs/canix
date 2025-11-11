@@ -1,5 +1,5 @@
 {
-  "name": "@canix/sdk",
+  "name": "@compx/canix-sdk",
   "version": "1.0.0",
   "description": "TypeScript SDK for Canix - Programmatically explore DeFi yield opportunities",
   "main": "dist/index.js",
