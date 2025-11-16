@@ -14,6 +14,7 @@ interface ApiOpportunity {
   apy?: number;
   tvl?: number;
   rewardAssets?: ApiRewardAsset[];
+  appId?: string; // Can be an app ID or wallet address (e.g., for Tinyman pools)
 }
 
 export interface Opportunity {
@@ -26,6 +27,7 @@ export interface Opportunity {
   yield: string;
   tvl: string;
   rewards: string;
+  appId?: string; // Can be an app ID or wallet address (e.g., for Tinyman pools)
 }
 
 const API_BASE_URL = "https://api-general.compx.io";
@@ -119,19 +121,88 @@ const categorizeAssetType = (assetType?: string, assetName?: string): string => 
   return "Standard Asset";
 };
 
+// Build deep link URL based on platform, type, and appId
+const buildDeepLinkUrl = (platform: string, type: string, appId?: string): string => {
+  const baseUrl = platformUrls[platform] || "https://app.compx.io";
+  
+  // If no appId, return base URL
+  if (!appId) {
+    return baseUrl;
+  }
+  
+  // Build deep links based on platform and type combination
+  switch (platform) {
+    case "CompX":
+      if (type === "farm" || type === "farming") {
+        // CompX farms: /farm?farmId={appId}
+        return `${baseUrl}/farm?farmId=${appId}`;
+      } else if (type === "staking") {
+        // CompX staking pools: appId contains the full URL path
+        // e.g., "staking-pool?poolId=3206268063"
+        return `${baseUrl}/${appId}`;
+      }
+      return baseUrl;
+    
+    case "Tinyman":
+      if (type === "liquidity") {
+        // Tinyman liquidity pools: /pool/{appId}
+        return `${baseUrl}/pool/${appId}`;
+      } else if (type === "farm" || type === "farming") {
+        // Tinyman farms: /pool/{poolAddress}/farming-programs/{farmId}
+        // appId contains both pool address and farm ID separated by "/"
+        const parts = appId.split("/");
+        if (parts.length >= 2) {
+          const poolAddress = parts[0];
+          const farmId = parts[1];
+          return `${baseUrl}/pool/${poolAddress}/farming-programs/${farmId}`;
+        }
+        // Fallback: if format is unexpected, use appId as pool address
+        return `${baseUrl}/pool/${appId}`;
+      }
+      return baseUrl;
+    
+    case "Pact":
+      if (type === "liquidity") {
+        // Pact liquidity pools: /add-liquidity/{appId}
+        return `${baseUrl}/add-liquidity/${appId}`;
+      } else if (type === "farm" || type === "farming") {
+        // Pact farms: /stake/{appId}
+        return `${baseUrl}/stake/${appId}`;
+      }
+      return baseUrl;
+    
+    case "Orbital Lending":
+      if (type === "lending") {
+        // Orbital Lending: /app/markets/details?id={appId}
+        return `${baseUrl}/app/markets/details?id=${appId}`;
+      }
+      return baseUrl;
+    
+    default:
+      return baseUrl;
+  }
+};
+
 // Transform API data to match our app's format
 const transformApiData = (apiData: ApiOpportunity[]): Opportunity[] => {
-  return apiData.map((item) => ({
-    platform: item.platform || "Unknown",
-    logo: platformLogos[item.platform] || "/compx-logo-small.png",
-    url: platformUrls[item.platform] || "https://app.compx.io",
-    asset: item.assetName || "Unknown Asset",
-    assetType: categorizeAssetType(item.assetType, item.assetName),
-    yieldType: typeMapping[item.type] || "Liquidity Pool",
-    yield: item.apy ? `${item.apy.toFixed(2)}%` : "0.00%",
-    tvl: item.tvl ? `$${formatTVL(item.tvl)}` : "$0",
-    rewards: formatRewardAssets(item.rewardAssets),
-  }));
+  return apiData.map((item) => {
+    const platform = item.platform || "Unknown";
+    const type = item.type || "liquidity";
+    const appId = item.appId;
+    
+    return {
+      platform,
+      logo: platformLogos[platform] || "/compx-logo-small.png",
+      url: buildDeepLinkUrl(platform, type, appId),
+      asset: item.assetName || "Unknown Asset",
+      assetType: categorizeAssetType(item.assetType, item.assetName),
+      yieldType: typeMapping[type] || "Liquidity Pool",
+      yield: item.apy ? `${item.apy.toFixed(2)}%` : "0.00%",
+      tvl: item.tvl ? `$${formatTVL(item.tvl)}` : "$0",
+      rewards: formatRewardAssets(item.rewardAssets),
+      appId,
+    };
+  });
 };
 
 // Format TVL with K, M, B suffixes
