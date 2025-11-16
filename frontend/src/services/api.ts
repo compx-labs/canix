@@ -1,19 +1,48 @@
 // API service for fetching yield opportunities
+
+// Types for API responses
+interface ApiRewardAsset {
+  name?: string;
+  assetId: number;
+}
+
+interface ApiOpportunity {
+  platform: string;
+  assetName?: string;
+  assetType?: string;
+  type: string;
+  apy?: number;
+  tvl?: number;
+  rewardAssets?: ApiRewardAsset[];
+}
+
+export interface Opportunity {
+  platform: string;
+  logo: string;
+  url: string;
+  asset: string;
+  assetType: string;
+  yieldType: string;
+  yield: string;
+  tvl: string;
+  rewards: string;
+}
+
 const API_BASE_URL = "https://api-general.compx.io";
 
-export const fetchOpportunities = async () => {
+export const fetchOpportunities = async (): Promise<Opportunity[]> => {
   const response = await fetch(`${API_BASE_URL}/api/getOpportunities`);
 
   if (!response.ok) {
     throw new Error("Failed to fetch opportunities");
   }
 
-  const data = await response.json();
+  const data: ApiOpportunity[] = await response.json();
   return transformApiData(data);
 };
 
 // Platform logo mapping
-const platformLogos = {
+const platformLogos: Record<string, string> = {
   Tinyman: "/tinyman-logo-dark.svg",
   CompX: "/compx-logo-small.png",
   "Folks Finance": "/folks-logo-dark.png",
@@ -22,7 +51,7 @@ const platformLogos = {
 };
 
 // Platform URL mapping
-const platformUrls = {
+const platformUrls: Record<string, string> = {
   Tinyman: "https://app.tinyman.org",
   CompX: "https://app.compx.io",
   "Folks Finance": "https://app.folks.finance",
@@ -31,7 +60,7 @@ const platformUrls = {
 };
 
 // Type mapping for yield types
-const typeMapping = {
+const typeMapping: Record<string, string> = {
   liquidity: "Liquidity Pool",
   lending: "Lending",
   staking: "Staking",
@@ -40,7 +69,7 @@ const typeMapping = {
 };
 
 // Asset type categorization
-const categorizeAssetType = (assetType, assetName) => {
+const categorizeAssetType = (assetType?: string, assetName?: string): string => {
   if (!assetType && !assetName) return "Standard Asset";
 
   const name = (assetName || "").toLowerCase();
@@ -71,7 +100,6 @@ const categorizeAssetType = (assetType, assetName) => {
     name.includes("xAlgo") ||
     name.includes("tAlgo") ||
     name.includes("mAlgo") ||
-    name.includes("mAlgo") ||
     name.includes("cUSDC") ||
     name.includes("cALPHA") ||
     name.includes("cTINY") ||
@@ -92,7 +120,7 @@ const categorizeAssetType = (assetType, assetName) => {
 };
 
 // Transform API data to match our app's format
-const transformApiData = (apiData) => {
+const transformApiData = (apiData: ApiOpportunity[]): Opportunity[] => {
   return apiData.map((item) => ({
     platform: item.platform || "Unknown",
     logo: platformLogos[item.platform] || "/compx-logo-small.png",
@@ -107,7 +135,7 @@ const transformApiData = (apiData) => {
 };
 
 // Format TVL with K, M, B suffixes
-const formatTVL = (value) => {
+const formatTVL = (value: number): string => {
   if (value >= 1000000000) {
     return `${(value / 1000000000).toFixed(2)}B`;
   } else if (value >= 1000000) {
@@ -119,7 +147,7 @@ const formatTVL = (value) => {
 };
 
 // Format reward assets from the API
-const formatRewardAssets = (rewardAssets) => {
+const formatRewardAssets = (rewardAssets?: ApiRewardAsset[]): string => {
   if (
     !rewardAssets ||
     !Array.isArray(rewardAssets) ||
@@ -133,3 +161,4 @@ const formatRewardAssets = (rewardAssets) => {
     .map((reward) => reward.name || `Asset ${reward.assetId}`)
     .join(", ");
 };
+
