@@ -66,7 +66,7 @@ export default function SearchAndFilters({
         <CustomDropdown
           label="Platform"
           value={platform}
-          options={['All', 'CompX', 'Folks Finance', 'Tinyman', 'Pact']}
+          options={['All', 'CompX', 'Folks Finance', 'Tinyman', 'Pact', 'Orbital Lending', 'DorkFi']}
           onChange={(value) => {
             onPlatformChange(value);
             setOpenDropdown(null);

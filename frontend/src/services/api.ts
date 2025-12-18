@@ -50,6 +50,7 @@ const platformLogos: Record<string, string> = {
   "Folks Finance": "/folks-logo-dark.png",
   Pact: "/pactfi-logo-dark.svg",
   "Orbital Lending": "/orbital-logo-small.png",
+  DorkFi: "/dorkfi-logo.png",
 };
 
 // Platform URL mapping
@@ -59,6 +60,7 @@ const platformUrls: Record<string, string> = {
   "Folks Finance": "https://app.folks.finance",
   Pact: "https://app.pact.fi",
   "Orbital Lending": "https://orbital.compx.io",
+  DorkFi: "https://app.dork.fi",
 };
 
 // Type mapping for yield types
@@ -176,6 +178,10 @@ const buildDeepLinkUrl = (platform: string, type: string, appId?: string): strin
         // Orbital Lending: /app/markets/details?id={appId}
         return `${baseUrl}/app/markets/details?id=${appId}`;
       }
+      return baseUrl;
+    
+    case "DorkFi":
+      // DorkFi does not have individual market links - all links go to base URL
       return baseUrl;
     
     default:
