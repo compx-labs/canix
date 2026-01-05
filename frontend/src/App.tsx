@@ -14,6 +14,7 @@ function App() {
   const [assetType, setAssetType] = useState<string>('All');
   const [platform, setPlatform] = useState<string>('All');
   const [yieldType, setYieldType] = useState<string>('All');
+  const [tvlRange, setTvlRange] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
   const [isInitialLoad, setIsInitialLoad] = useState<boolean>(true);
@@ -44,6 +45,25 @@ function App() {
     }
   }, [minLoadTimeElapsed, isLoading]);
   
+  // Parse TVL string back to number for comparison
+  const parseTVL = (tvlString: string): number => {
+    if (!tvlString || tvlString === '$0') return 0;
+    
+    // Remove $ and parse
+    const cleaned = tvlString.replace('$', '').trim();
+    const numStr = cleaned.replace(/[KMkmBb]/g, '');
+    const num = parseFloat(numStr) || 0;
+    
+    if (cleaned.includes('B') || cleaned.includes('b')) {
+      return num * 1000000000;
+    } else if (cleaned.includes('M') || cleaned.includes('m')) {
+      return num * 1000000;
+    } else if (cleaned.includes('K') || cleaned.includes('k')) {
+      return num * 1000;
+    }
+    return num;
+  };
+
   // Filter data based on search and filters
   const filteredData = yieldData.filter((row) => {
     // Search filter
@@ -61,7 +81,38 @@ function App() {
     // Yield Type filter
     const matchesYieldType = yieldType === 'All' || row.yieldType === yieldType;
     
-    return matchesSearch && matchesAssetType && matchesPlatform && matchesYieldType;
+    // TVL Range filter
+    let matchesTvl = true;
+    if (tvlRange !== 'All') {
+      const tvlValue = parseTVL(row.tvl);
+      switch (tvlRange) {
+        case 'Less than $1,000':
+          matchesTvl = tvlValue < 1000;
+          break;
+        case '$1,000 - $50,000':
+          matchesTvl = tvlValue >= 1000 && tvlValue < 50000;
+          break;
+        case '$50,000 - $250,000':
+          matchesTvl = tvlValue >= 50000 && tvlValue < 250000;
+          break;
+        case '$250,000 - $1,000,000':
+          matchesTvl = tvlValue >= 250000 && tvlValue < 1000000;
+          break;
+        case '$1,000,000 - $5,000,000':
+          matchesTvl = tvlValue >= 1000000 && tvlValue < 5000000;
+          break;
+        case '$5,000,000 - $10,000,000':
+          matchesTvl = tvlValue >= 5000000 && tvlValue < 10000000;
+          break;
+        case '$10,000,000+':
+          matchesTvl = tvlValue >= 10000000;
+          break;
+        default:
+          matchesTvl = true;
+      }
+    }
+    
+    return matchesSearch && matchesAssetType && matchesPlatform && matchesYieldType && matchesTvl;
   });
 
   // Sort by APY (highest to lowest)
@@ -87,6 +138,7 @@ function App() {
     setAssetType('All');
     setPlatform('All');
     setYieldType('All');
+    setTvlRange('All');
     setCurrentPage(1);
   };
 
@@ -116,10 +168,12 @@ function App() {
             assetType={assetType}
             platform={platform}
             yieldType={yieldType}
+            tvlRange={tvlRange}
             onSearchChange={handleSearchChange}
             onAssetTypeChange={handleFilterChange(setAssetType)}
             onPlatformChange={handleFilterChange(setPlatform)}
             onYieldTypeChange={handleFilterChange(setYieldType)}
+            onTvlRangeChange={handleFilterChange(setTvlRange)}
             onClear={handleClear}
           />
 
