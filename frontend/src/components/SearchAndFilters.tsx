@@ -6,10 +6,12 @@ interface SearchAndFiltersProps {
   assetType: string;
   platform: string;
   yieldType: string;
+  tvlRange: string;
   onSearchChange: (value: string) => void;
   onAssetTypeChange: (value: string) => void;
   onPlatformChange: (value: string) => void;
   onYieldTypeChange: (value: string) => void;
+  onTvlRangeChange: (value: string) => void;
   onClear: () => void;
 }
 
@@ -18,10 +20,12 @@ export default function SearchAndFilters({
   assetType,
   platform,
   yieldType,
+  tvlRange,
   onSearchChange,
   onAssetTypeChange,
   onPlatformChange,
   onYieldTypeChange,
+  onTvlRangeChange,
   onClear,
 }: SearchAndFiltersProps) {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
@@ -50,7 +54,7 @@ export default function SearchAndFilters({
       </div>
 
       {/* Filter Dropdowns */}
-      <div className="grid grid-cols-3 gap-2 md:gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
         <CustomDropdown
           label="Asset Type"
           value={assetType}
@@ -86,6 +90,18 @@ export default function SearchAndFilters({
           dropdownKey="yieldType"
           isOpen={openDropdown === 'yieldType'}
           onToggle={() => toggleDropdown('yieldType')}
+        />
+        <CustomDropdown
+          label="TVL"
+          value={tvlRange}
+          options={['All', 'Less than $1,000', '$1,000 - $50,000', '$50,000 - $250,000', '$250,000 - $1,000,000', '$1,000,000 - $5,000,000', '$5,000,000 - $10,000,000', '$10,000,000+']}
+          onChange={(value) => {
+            onTvlRangeChange(value);
+            setOpenDropdown(null);
+          }}
+          dropdownKey="tvlRange"
+          isOpen={openDropdown === 'tvlRange'}
+          onToggle={() => toggleDropdown('tvlRange')}
         />
       </div>
     </div>
